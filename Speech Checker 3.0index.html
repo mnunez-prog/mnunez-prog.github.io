@@ -219,7 +219,7 @@
         <h1>Speech Pronunciation Checker</h1>
         <p class="description">Paste the text you want to compare below, then click the microphone to start speaking.</p>
         
-        <textarea id="text-to-pronounce" placeholder="Escribe aquí el texto que quieres practicar..."></textarea>
+        <textarea id="text-to-pronounce" placeholder="Escribe aquÃ­ el texto que quieres practicar..."></textarea>
         
         <div class="buttons">
             <button id="start-btn"><i class="fas fa-microphone"></i> Start</button>
@@ -255,7 +255,7 @@
         const themeButtons = document.querySelectorAll('.theme-btn');
         const body = document.body;
 
-        // --- LÓGICA DEL SELECTOR DE TEMAS ---
+        // --- LÃ“GICA DEL SELECTOR DE TEMAS ---
         themeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const theme = btn.getAttribute('data-theme');
@@ -269,7 +269,7 @@
             body.className = savedTheme;
         }
 
-        // --- LÓGICA DE LA APLICACIÓN ---
+        // --- LÃ“GICA DE LA APLICACIÃ“N ---
         const recognitionLang = 'en-US';
         let mediaRecorder;
         let audioChunks = [];
@@ -373,8 +373,8 @@
                 recordingIndicator.classList.add('recording');
 
             } catch (err) {
-                console.error("Error al acceder al micrófono:", err);
-                feedbackText.innerHTML = "No se pudo acceder al micrófono. Asegúrate de dar permiso.";
+                console.error("Error al acceder al micrÃ³fono:", err);
+                feedbackText.innerHTML = "No se pudo acceder al micrÃ³fono. AsegÃºrate de dar permiso.";
             }
         }
         
