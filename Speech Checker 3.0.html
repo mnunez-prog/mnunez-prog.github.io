@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Pronunciation Checker</title>
+    <!-- CDN de Font Awesome para los iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- VARIABLES DE COLOR PARA LOS TEMAS --- */
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --heading-color: #1a73e8;
+            --border-color: #e0e0e0;
+            --feedback-bg: #fafafa;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --frame-gradient: linear-gradient(45deg, #4285f4, #9b72cb, #ea4335, #fbbc05);
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --heading-color: #bb86fc;
+            --border-color: #444444;
+            --feedback-bg: #2a2a2a;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --frame-gradient: linear-gradient(45deg, #bb86fc, #03dac6, #cf6679);
+        }
+
+        body.ocean-mode {
+            --bg-color: #e0f7fa;
+            --container-bg: #ffffff;
+            --text-color: #004d40;
+            --heading-color: #00796b;
+            --border-color: #b2dfdb;
+            --feedback-bg: #f0fbfb;
+            --shadow-color: rgba(0, 121, 107, 0.15);
+            --frame-gradient: linear-gradient(45deg, #00796b, #4db6ac, #80cbc4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        /* --- NUEVO MARCO ATRACTIVO --- */
+        .app-frame {
+            padding: 4px;
+            background: var(--frame-gradient);
+            border-radius: 16px;
+            box-shadow: 0 6px 20px var(--shadow-color);
+            transition: background 0.3s;
+        }
+        .container {
+            background-color: var(--container-bg);
+            padding: 2rem;
+            border-radius: 13px; /* Ligeramente menor que el marco */
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        h1 {
+            color: var(--heading-color);
+            margin-bottom: 0.5rem;
+        }
+        .description {
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            color: #6c757d;
+        }
+        body.dark-mode .description {
+            color: #9e9e9e;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 100px;
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            resize: vertical;
+            margin-bottom: 1rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        #start-btn { background-color: #34a853; color: white; }
+        #stop-btn { background-color: #ea4335; color: white; }
+        #play-btn { background-color: #fbbc05; color: #333; }
+        #play-user-btn { background-color: #4285f4; color: white; }
+        #clear-btn { 
+            background-color: #6c757d; 
+            color: white; 
+            grid-column: 1 / -1;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        button:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .feedback-container {
+            border: 1px solid var(--border-color);
+            background-color: var(--feedback-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 80px;
+            text-align: left;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        .feedback-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        /* --- CAMBIO: TODAS LAS PALABRAS SON CLICKEABLES --- */
+        .correct { 
+            color: #34a853; 
+            font-weight: bold; 
+            cursor: pointer; 
+            text-decoration: underline dotted;
+        }
+        .incorrect { 
+            color: #ea4335; 
+            font-weight: bold; 
+            cursor: pointer; 
+            text-decoration: underline dotted; 
+        }
+        .score { margin-top: 1rem; font-size: 1.2rem; font-weight: bold; color: var(--heading-color); }
+        
+        .recording-indicator {
+            display: none;
+            width: 12px;
+            height: 12px;
+            background-color: #ea4335;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        .recording-indicator.recording {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 67, 53, 0); }
+        }
+        
+        .theme-switcher {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 5px;
+        }
+        .theme-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+        #theme-light { background-color: #f0f2f5; }
+        #theme-dark { background-color: #121212; }
+        #theme-ocean { background-color: #e0f7fa; }
+    </style>
+</head>
+<body>
+
+<div class="app-frame">
+    <div class="container">
+        <div class="theme-switcher">
+            <div class="theme-btn" id="theme-light" data-theme=""></div>
+            <div class="theme-btn" id="theme-dark" data-theme="dark-mode"></div>
+            <div class="theme-btn" id="theme-ocean" data-theme="ocean-mode"></div>
+        </div>
+
+        <h1>Speech Pronunciation Checker</h1>
+        <p class="description">Paste the text you want to compare below, then click the microphone to start speaking.</p>
+        
+        <textarea id="text-to-pronounce" placeholder="Escribe aquí el texto que quieres practicar..."></textarea>
+        
+        <div class="buttons">
+            <button id="start-btn"><i class="fas fa-microphone"></i> Start</button>
+            <button id="stop-btn" disabled><i class="fas fa-stop"></i> Stop</button>
+            <button id="play-btn"><i class="fas fa-play"></i> Play Correct</button>
+            <button id="play-user-btn" disabled><i class="fas fa-headphones"></i> Play My Audio</button>
+            <button id="clear-btn"><i class="fas fa-trash"></i> Clear All</button>
+        </div>
+
+        <div class="feedback-container">
+            <h2 class="feedback-header">Feedback:<span id="recording-indicator" class="recording-indicator"></span></h2>
+            <div id="feedback-text" class="feedback-text"></div>
+            <div id="score" class="score"></div>
+        </div>
+        
+        <audio id="user-audio-player" style="display: none;"></audio>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Referencias a los elementos del DOM
+        const textToPronounce = document.getElementById('text-to-pronounce');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const playBtn = document.getElementById('play-btn');
+        const playUserBtn = document.getElementById('play-user-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const feedbackText = document.getElementById('feedback-text');
+        const scoreEl = document.getElementById('score');
+        const userAudioPlayer = document.getElementById('user-audio-player');
+        const recordingIndicator = document.getElementById('recording-indicator');
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const body = document.body;
+
+        // --- LÓGICA DEL SELECTOR DE TEMAS ---
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                body.className = theme;
+                localStorage.setItem('selectedTheme', theme);
+            });
+        });
+
+        const savedTheme = localStorage.getItem('selectedTheme');
+        if (savedTheme) {
+            body.className = savedTheme;
+        }
+
+        // --- LÓGICA DE LA APLICACIÓN ---
+        const recognitionLang = 'en-US';
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioUrl = null;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = recognitionLang;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const spokenText = event.results[last][0].transcript;
+                compareAndDisplay(textToPronounce.value, spokenText);
+            };
+            
+            recognition.onend = () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                recordingIndicator.classList.remove('recording');
+            };
+
+        } else {
+            feedbackText.innerHTML = "Lo sentimos, tu navegador no soporta la API de Reconocimiento de Voz. Prueba con Google Chrome.";
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (textToPronounce.value.trim() === "") {
+                feedbackText.innerHTML = "Por favor, ingresa un texto para practicar.";
+                return;
+            }
+            startRecording();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            if (recognition) recognition.stop();
+        });
+
+        playBtn.addEventListener('click', () => {
+            if (textToPronounce.value.trim() === "") {
+                feedbackText.innerHTML = "Por favor, ingresa un texto para reproducir.";
+                return;
+            }
+            const utterance = new SpeechSynthesisUtterance(textToPronounce.value);
+            utterance.lang = recognitionLang;
+            speechSynthesis.speak(utterance);
+        });
+        
+        playUserBtn.addEventListener('click', () => {
+            if(userAudioPlayer.src) userAudioPlayer.play();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            textToPronounce.value = '';
+            feedbackText.innerHTML = '';
+            scoreEl.innerHTML = '';
+            playUserBtn.disabled = true;
+            recordingIndicator.classList.remove('recording');
+            if (audioUrl) {
+                URL.revokeObjectURL(audioUrl);
+                audioUrl = null;
+                userAudioPlayer.src = '';
+            }
+        });
+        
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                audioChunks = [];
+                playUserBtn.disabled = true;
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    if (audioUrl) URL.revokeObjectURL(audioUrl);
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    userAudioPlayer.src = audioUrl;
+                    playUserBtn.disabled = false;
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                recognition.start();
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                feedbackText.innerHTML = 'Escuchando...';
+                scoreEl.innerHTML = '';
+                recordingIndicator.classList.add('recording');
+
+            } catch (err) {
+                console.error("Error al acceder al micrófono:", err);
+                feedbackText.innerHTML = "No se pudo acceder al micrófono. Asegúrate de dar permiso.";
+            }
+        }
+        
+        // --- CAMBIO: EVENTO DE CLICK PARA TODAS LAS PALABRAS ---
+        feedbackText.addEventListener('click', (event) => {
+            if (event.target.classList.contains('incorrect') || event.target.classList.contains('correct')) {
+                const wordToSay = event.target.textContent;
+                const utterance = new SpeechSynthesisUtterance(wordToSay);
+                utterance.lang = recognitionLang;
+                speechSynthesis.speak(utterance);
+            }
+        });
+
+        function compareAndDisplay(originalText, spokenText) {
+            const originalWords = originalText.trim().toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, "").split(/\s+/).filter(Boolean);
+            const spokenWords = spokenText.trim().toLowerCase().split(/\s+/);
+            
+            let htmlResult = '';
+            let correctCount = 0;
+            
+            originalWords.forEach((word) => {
+                if (spokenWords.includes(word)) {
+                    htmlResult += `<span class="correct">${word}</span> `;
+                    correctCount++;
+                } else {
+                    htmlResult += `<span class="incorrect">${word}</span> `;
+                }
+            });
+            
+            feedbackText.innerHTML = htmlResult;
+
+            if (originalWords.length > 0) {
+                const accuracy = (correctCount / originalWords.length) * 100;
+                scoreEl.innerHTML = `Accuracy: ${accuracy.toFixed(0)}%`;
+            } else {
+                scoreEl.innerHTML = '';
+            }
+            
+            if (recognition) recognition.stop();
+        }
+    });
+</script>
+
+</body>
+</html>
