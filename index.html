@@ -54,7 +54,6 @@
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
         }
-        /* --- NUEVO MARCO ATRACTIVO --- */
         .app-frame {
             padding: 4px;
             background: var(--frame-gradient);
@@ -65,7 +64,7 @@
         .container {
             background-color: var(--container-bg);
             padding: 2rem;
-            border-radius: 13px; /* Ligeramente menor que el marco */
+            border-radius: 13px;
             width: 100%;
             max-width: 600px;
             text-align: center;
@@ -154,7 +153,6 @@
             font-size: 1.2rem;
             line-height: 1.6;
         }
-        /* --- CAMBIO: TODAS LAS PALABRAS SON CLICKEABLES --- */
         .correct { 
             color: #34a853; 
             font-weight: bold; 
@@ -204,6 +202,21 @@
         #theme-light { background-color: #f0f2f5; }
         #theme-dark { background-color: #121212; }
         #theme-ocean { background-color: #e0f7fa; }
+
+        /* --- ESTILOS PARA EL BOTÓN DE PANTALLA COMPLETA --- */
+        #fullscreen-btn {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--feedback-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -236,6 +249,11 @@
         </div>
         
         <audio id="user-audio-player" style="display: none;"></audio>
+
+        <!-- BOTÓN DE PANTALLA COMPLETA AÑADIDO -->
+        <button id="fullscreen-btn" title="Pantalla Completa">
+            <i class="fas fa-expand"></i>
+        </button>
     </div>
 </div>
 
@@ -254,6 +272,8 @@
         const recordingIndicator = document.getElementById('recording-indicator');
         const themeButtons = document.querySelectorAll('.theme-btn');
         const body = document.body;
+        const fullscreenBtn = document.getElementById('fullscreen-btn'); // Referencia al nuevo botón
+        const fullscreenIcon = fullscreenBtn.querySelector('i'); // Referencia al icono
 
         // --- LÓGICA DEL SELECTOR DE TEMAS ---
         themeButtons.forEach(btn => {
@@ -268,6 +288,29 @@
         if (savedTheme) {
             body.className = savedTheme;
         }
+
+        // --- LÓGICA DE PANTALLA COMPLETA AÑADIDA ---
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error al intentar activar pantalla completa: ${err.message} (${err.name})`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+        fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+        // Cambiar el icono al entrar/salir de pantalla completa
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenIcon.classList.replace('fa-expand', 'fa-compress');
+            } else {
+                fullscreenIcon.classList.replace('fa-compress', 'fa-expand');
+            }
+        });
 
         // --- LÓGICA DE LA APLICACIÓN ---
         const recognitionLang = 'en-US';
@@ -378,7 +421,6 @@
             }
         }
         
-        // --- CAMBIO: EVENTO DE CLICK PARA TODAS LAS PALABRAS ---
         feedbackText.addEventListener('click', (event) => {
             if (event.target.classList.contains('incorrect') || event.target.classList.contains('correct')) {
                 const wordToSay = event.target.textContent;
@@ -420,3 +462,5 @@
 
 </body>
 </html>
+
+
